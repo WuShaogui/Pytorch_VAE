@@ -123,8 +123,8 @@ class VanillaVAE(BaseVAE):
         return eps * std + mu
 
     def forward(self, input: Tensor, **kwargs) -> List[Tensor]:
-        mu, log_var = self.encode(input)
-        z = self.reparameterize(mu, log_var) # 
+        mu, log_var = self.encode(input)     # torch.Size([2, 128]) torch.Size([2, 128])
+        z = self.reparameterize(mu, log_var) # torch.Size([2, 128])
         return [self.decode(z), input, mu, log_var]
 
     def loss_function(self, *args, **kwargs) -> dict:
@@ -186,7 +186,16 @@ if __name__ == "__main__":
     # 模拟训练过程
     inputs = torch.rand((2, 3, 64, 64))
     net = VanillaVAE(in_channels, latent_dim)
-    outputs = net(inputs)
-    print(inputs.shape)
+    reconstructed_x,input, mu, log_var = net(inputs)
+    print(reconstructed_x.shape,mu.shape, log_var.shape)
 
     # 模拟生成样本过程
+    num_samples = 3
+    current_device=torch.device('cpu')
+    samples=net.generate(num_samples,current_device)
+    print(samples.shape)
+    
+    # 模拟计算损失函数
+    loss=net.loss_function(reconstructed_x,input, mu, log_var)
+    print(loss)
+    
