@@ -1,5 +1,7 @@
 /.vscode
 imgs/*
-*.pyc
 runs/*
 mask.png
+**/*.pyc
+*.pyc
+*/__pycache__/*
