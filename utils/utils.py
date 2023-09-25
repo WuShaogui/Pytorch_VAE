@@ -23,3 +23,16 @@ def preprocess_input(image):
     image /= np.array([0.229, 0.224, 0.225])
 
     return image
+
+
+def get_lr(opt):
+    """获取优化器的学习率
+
+    Args:
+        opt (torch.opti.optimer): 优化器
+
+    Returns:
+        float: 学习率值
+    """
+    for par in opt.param_groups:
+        return par["lr"]

@@ -1,13 +1,16 @@
 import datetime
 import os
-import torch
-from torch.utils.data import DataLoader
-from data.dataset import VAEDataset
-from nets.vanilla_vae import VanillaVAE
-import torchvision.utils as vutils
-import numpy as np
-
 import sys
+
+import numpy as np
+import torch
+import torchvision.utils as vutils
+from torch.utils.data import DataLoader
+
+from data.dataset import VAEDataset
+from nets.vanilla_vae import VanillaVAE, weights_init
+from utils.utils import set_seed
+from utils.utils import get_lr
 
 if sys.gettrace() is not None:
     # Code 1: This code will be executed when debugging
@@ -19,6 +22,9 @@ else:
     os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 
 if __name__ == "__main__":
+
+    set_seed(seed=0)
+
     # TODO 加载数据集
     data_path = "/home/wushaogui/MyCodes/Pytorch_VAE/imgs/中航阳极分类数据"
     train_label_lines = [
@@ -33,7 +39,7 @@ if __name__ == "__main__":
             os.path.join(data_path, "val.txt"), encoding="utf-8", mode="r"
         ).readlines()
     ]
-    input_shape = (64, 64)
+    input_shape = (128, 128)
     batch_size = 16
     train_dataset = VAEDataset(train_label_lines, input_shape)
     train_dataloader = DataLoader(
@@ -49,11 +55,14 @@ if __name__ == "__main__":
     in_channels = 3
     latent_dim = 256
     net = VanillaVAE(device, in_channels, latent_dim)
+    weights_init(net)
     net = net.to(device)
 
     # 定义优化函数
     opt = torch.optim.Adam(net.parameters(), lr=1e-3, weight_decay=5e-4)
-    lr_scheduler = torch.optim.lr_scheduler.StepLR(opt, step_size=3, gamma=0.98)
+    lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(
+        opt, gamma=0.98, last_epoch=50
+    )
 
     # 训练模型
     log_subdir = datetime.datetime.strftime(
@@ -73,7 +82,7 @@ if __name__ == "__main__":
             img = img.to(device)
             # 前向推理
             reconstructed_x, input, mu, log_var = net(img)
-            loss = net.loss_function(reconstructed_x, input, mu, log_var, M_N=0.00025)
+            loss = net.loss_function(reconstructed_x, input, mu, log_var, M_N=0.025)
             train_loss = loss["loss"]
 
             # 后向更新
@@ -86,13 +95,14 @@ if __name__ == "__main__":
             kld_loss = loss["KLD"]
             train_total_loss += train_loss.item()
 
-            if i % 10 == 0:
+            if i % 50 == 0:
                 print(
-                    "epoch:{} train loss:{:.4f} reconstruction_loss:{:.4f} kld_loss:{:.4f}".format(
+                    "epoch:{} train loss:{:.4f} reconstruction_loss:{:.4f} kld_loss:{:.4f} lr:{}".format(
                         epoch,
                         train_total_loss / (i + 1),
                         reconstruction_loss.item(),
                         kld_loss.item(),
+                        get_lr(opt),
                     )
                 )
 
@@ -111,13 +121,14 @@ if __name__ == "__main__":
             reconstruction_loss = val_loss["Reconstruction_Loss"]
             kld_loss = val_loss["KLD"]
 
-            if i % 10 == 0:
+            if i % 50 == 0:
                 print(
-                    "epoch:{} val loss:{:.4f} reconstruction_loss:{:.4f} kld_loss:{:.4f}".format(
+                    "epoch:{} val loss:{:.4f} reconstruction_loss:{:.4f} kld_loss:{:.4f} lr:{}".format(
                         epoch,
                         val_total_loss / (i + 1),
                         reconstruction_loss.item(),
                         kld_loss.item(),
+                        get_lr(opt),
                     )
                 )
         if val_total_loss / (i + 1) < min_loss:

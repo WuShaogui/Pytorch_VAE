@@ -4,9 +4,11 @@ import torch
 import cv2
 import torch.nn as nn
 from PIL import Image
+import numpy as np
 
 from torch.utils.data import DataLoader
 from torchvision import transforms
+from utils.utils import preprocess_input
 
 
 class VAEDataset(nn.Module):
@@ -19,14 +21,7 @@ class VAEDataset(nn.Module):
         super(VAEDataset, self).__init__()
 
         self.label_lines = label_lines
-        self.transform = transforms.Compose(
-            [
-                transforms.RandomHorizontalFlip(),
-                # transforms.CenterCrop(148),
-                transforms.Resize(input_shape),
-                transforms.ToTensor(),
-            ]
-        )
+        self.input_shape = input_shape
         self.is_aug = is_aug
 
     def rand(self, a=0, b=1):
@@ -37,11 +32,8 @@ class VAEDataset(nn.Module):
         img = Image.open(image_path)
 
         img = img.convert("RGB")
-        # img = img.resize(self.input_shape)
-        if self.transform is not None:
-            img = self.transform(img)
-
-        # img = np.transpose(preprocess_input(np.array(img, np.float32)), [2, 0, 1])
+        img = img.resize(self.input_shape)
+        img = np.transpose(preprocess_input(np.array(img, np.float32)), [2, 0, 1])
 
         return img
 
@@ -61,7 +53,6 @@ if __name__ == "__main__":
     input_shape = (512, 512)
     dataset = VAEDataset(label_lines, input_shape)
 
-    
     train_dataloader = DataLoader(dataset, batch_size=8, shuffle=True, pin_memory=True)
 
     for i, batch in enumerate(train_dataloader):

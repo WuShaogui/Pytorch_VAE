@@ -30,15 +30,11 @@
 
 import os
 import os.path as osp
-from glob import glob
 import pathlib
 import random
-import json
-import time
-import numpy as np
-import cv2
 import shutil
-from PIL import Image
+from glob import glob
+from pathlib import Path
 import tqdm
 
 
@@ -55,7 +51,7 @@ def scan_images(images_dir):
     for ext in ["png", "jpg", "jpeg", "bmp"]:
         ext_images_path = pathlib.Path(images_dir).glob("**/*." + ext)
         for image_path in ext_images_path:
-            images_path.append(str(image_path))
+            images_path.append(os.path.abspath(str(image_path)))
 
     return images_path
 
@@ -71,8 +67,12 @@ def main(data_dir, save_dir, train_roate=0.9, seed=0):
     train_index = int(train_roate * len(images_path))
     train_file = images_path[:train_index]
     val_file = images_path[train_index:]
+    print("scan done")
 
     # 拷贝文件
+    print("analy images...")
+    save_dir_name = os.path.split(Path(data_dir))[1]
+    save_dir = osp.join(osp.abspath(save_dir), save_dir_name)
     if not osp.exists(save_dir):
         os.makedirs(save_dir)
     if not osp.exists(osp.join(save_dir, "train")):
@@ -81,14 +81,14 @@ def main(data_dir, save_dir, train_roate=0.9, seed=0):
         os.makedirs(osp.join(save_dir, "val"))
 
     with open(osp.join(save_dir, "train.txt"), encoding="utf-8", mode="w") as fw:
-        for class_idx in train_file:
-            save_image_path = osp.join(save_dir, "train\\", osp.basename(class_idx))
+        for class_idx in tqdm.tqdm(train_file):
+            save_image_path = osp.join(save_dir, "train/", osp.basename(class_idx))
             shutil.copyfile(class_idx, save_image_path)
             fw.write("{}\n".format(save_image_path))
 
     with open(osp.join(save_dir, "val.txt"), encoding="utf-8", mode="w") as fw:
-        for class_idx in val_file:
-            save_image_path = osp.join(save_dir, "val\\", osp.basename(class_idx))
+        for class_idx in tqdm.tqdm(val_file):
+            save_image_path = osp.join(save_dir, "val/", osp.basename(class_idx))
             shutil.copyfile(class_idx, save_image_path)
             fw.write("{}\n".format(save_image_path))
 
@@ -97,6 +97,6 @@ def main(data_dir, save_dir, train_roate=0.9, seed=0):
 
 
 if __name__ == "__main__":
-    data_dir = r"C:\Users\Administrator\Downloads\中航阳极分类数据"
-    save_dir = r"C:\Users\Administrator\Documents\MyCodes\Pytorch_VAE\imgs"
+    data_dir = r"/mnt/wushaogui/中航阳极分类数据"
+    save_dir = r"imgs"
     main(data_dir, save_dir)
