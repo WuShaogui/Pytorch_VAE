@@ -20,11 +20,11 @@ def main():
 
     # 重建样本阶段
     images_path = {
-        "/home/wushaogui/MyCodes/Pytorch_VAE/imgs/中航阳极分类数据/val/内侧-2022.10.14 11.04.15.483-破损面积287.222-2帧：2219-序号：28-高21.52-宽32.55-.bmp",
-        "/home/wushaogui/MyCodes/Pytorch_VAE/imgs/中航阳极分类数据/val/内侧-2022.10.14 02.18.49.828-破损面积41.518-2帧：2277-序号：1-高21.84-宽44.15-.bmp",
-        "/home/wushaogui/MyCodes/Pytorch_VAE/imgs/中航阳极分类数据/val/内侧-2022.10.14 19.59.50.062-破损面积246.851-2帧：1368-序号：31-高19.41-宽43.58-.bmp",
-        "/home/wushaogui/MyCodes/Pytorch_VAE/imgs/中航阳极分类数据/val/内侧-EA数_24-2022.10.14 03.31.41.743-气泡 -面积1.930-分切内侧-帧710-宽1.360-高1.650-.bmp",
-        "/home/wushaogui/MyCodes/Pytorch_VAE/imgs/中航阳极分类数据/val/内侧-EA数_48-2022.10.16 04.13.10.432-AT9漏金属-面积0.387-宽0.275-分切内侧-帧1367-.jpeg",
+        "/home/wushaogui/MyCodes/Pytorch_VAE/imgs/反光/train/2210312201189B9_20230202100102_1.bmp",
+        "/home/wushaogui/MyCodes/Pytorch_VAE/imgs/反光/train/2210300632219B3_20230202101743_3.bmp",
+        "/home/wushaogui/MyCodes/Pytorch_VAE/imgs/反光/val/2210302341109B3_20230202101740_2.bmp",
+        "/home/wushaogui/MyCodes/Pytorch_VAE/imgs/反光/val/2210300632219B3_20230202095903_5.bmp",
+        "/home/wushaogui/MyCodes/Pytorch_VAE/imgs/反光/val/2210312201189B9_20230202095806_1.bmp",
     }
     input_shape = (128, 128)
     save_path = "imgs"

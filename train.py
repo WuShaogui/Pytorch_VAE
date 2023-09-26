@@ -26,7 +26,7 @@ if __name__ == "__main__":
     set_seed(seed=0)
 
     # TODO 加载数据集
-    data_path = "/home/wushaogui/MyCodes/Pytorch_VAE/imgs/中航阳极分类数据"
+    data_path = "/home/wushaogui/MyCodes/Pytorch_VAE/imgs/反光"
     train_label_lines = [
         image_path.replace("\n", "")
         for image_path in open(
@@ -60,9 +60,7 @@ if __name__ == "__main__":
 
     # 定义优化函数
     opt = torch.optim.Adam(net.parameters(), lr=1e-3, weight_decay=5e-4)
-    lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(
-        opt, gamma=0.98, last_epoch=50
-    )
+    lr_scheduler = torch.optim.lr_scheduler.StepLR(opt, step_size=2, gamma=0.98)
 
     # 训练模型
     log_subdir = datetime.datetime.strftime(
@@ -73,7 +71,7 @@ if __name__ == "__main__":
         os.makedirs(log_dir)
 
     min_loss = np.inf
-    num_epoches = 30
+    num_epoches = 100
     for epoch in range(num_epoches):
         train_total_loss = 0
         net = net.train()
@@ -82,7 +80,7 @@ if __name__ == "__main__":
             img = img.to(device)
             # 前向推理
             reconstructed_x, input, mu, log_var = net(img)
-            loss = net.loss_function(reconstructed_x, input, mu, log_var, M_N=0.025)
+            loss = net.loss_function(reconstructed_x, input, mu, log_var, M_N=0.002)
             train_loss = loss["loss"]
 
             # 后向更新

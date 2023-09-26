@@ -5,3 +5,4 @@ mask.png
 **/*.pyc
 *.pyc
 */__pycache__/*
+log.md
