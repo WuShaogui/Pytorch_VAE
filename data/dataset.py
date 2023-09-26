@@ -42,7 +42,7 @@ class VAEDataset(nn.Module):
 
 
 if __name__ == "__main__":
-    data_path = "xxxx" # 数据集所在文件夹路径，也就是由build_trainning_dtat.py的保存路径
+    data_path = "/home/wushaogui/MyCodes/Pytorch_VAE/imgs/中航阳极分类数据"
     label_lines = [
         image_path.replace("\n", "")
         for image_path in open(

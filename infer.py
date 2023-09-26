@@ -20,7 +20,11 @@ def main():
 
     # 重建样本阶段
     images_path = {
-        "xxx", #待重建的文件路径
+        "/home/wushaogui/MyCodes/Pytorch_VAE/imgs/反光/train/2210312201189B9_20230202100102_1.bmp",
+        "/home/wushaogui/MyCodes/Pytorch_VAE/imgs/反光/train/2210300632219B3_20230202101743_3.bmp",
+        "/home/wushaogui/MyCodes/Pytorch_VAE/imgs/反光/val/2210302341109B3_20230202101740_2.bmp",
+        "/home/wushaogui/MyCodes/Pytorch_VAE/imgs/反光/val/2210300632219B3_20230202095903_5.bmp",
+        "/home/wushaogui/MyCodes/Pytorch_VAE/imgs/反光/val/2210312201189B9_20230202095806_1.bmp",
     }
     input_shape = (128, 128)
     save_path = "imgs"

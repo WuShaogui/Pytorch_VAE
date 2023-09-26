@@ -97,6 +97,6 @@ def main(data_dir, save_dir, train_roate=0.9, seed=0):
 
 
 if __name__ == "__main__":
-    data_dir = "xxxx" # 填写待学习的文件夹路径
+    data_dir = "/mnt/wushaogui/反光"
     save_dir = r"imgs"
     main(data_dir, save_dir)
