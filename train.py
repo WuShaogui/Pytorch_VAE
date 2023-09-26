@@ -26,7 +26,7 @@ if __name__ == "__main__":
     set_seed(seed=0)
 
     # TODO 加载数据集
-    data_path = "/home/wushaogui/MyCodes/Pytorch_VAE/imgs/反光"
+    data_path = "xxxx" # 数据集文件夹路径
     train_label_lines = [
         image_path.replace("\n", "")
         for image_path in open(
