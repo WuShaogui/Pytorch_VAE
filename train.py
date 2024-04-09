@@ -1,5 +1,6 @@
 import datetime
 import os
+import random
 import sys
 
 import numpy as np
@@ -30,28 +31,33 @@ if __name__ == "__main__":
     set_seed(seed=0)
 
     # TODO 加载数据集
-    data_path = "/home/wushaogui/MyCodes/Pytorch_VAE/imgs/反光"
+    data_path = "/mnt/wushaogui/unsupervised/data/MNIST-M/data/"
     train_label_lines = [
         image_path.replace("\n", "")
         for image_path in open(
-            os.path.join(data_path, "train.txt"), encoding="utf-8", mode="r"
+            os.path.join(data_path, "mnist_m_train_labels.txt"), encoding="utf-8", mode="r"
         ).readlines()
     ]
-    val_label_lines = [
-        image_path.replace("\n", "")
-        for image_path in open(
-            os.path.join(data_path, "val.txt"), encoding="utf-8", mode="r"
-        ).readlines()
-    ]
-    input_shape = (128, 128)
-    batch_size = 16
-    train_dataset = VAEDataset(train_label_lines, input_shape)
+    train_label_lines=list(map(lambda line:os.path.join(data_path,'mnist_m_train',line.split()[0]),train_label_lines))
+    
+    input_shape = (32, 32)
+    dataset = VAEDataset(train_label_lines, input_shape)
+
+    # 划分训练集和验证集
+    train_roate=0.9
+    train_num=int(train_roate*len(dataset))
+    print('train num:{} val num:{}'.format(train_num,len(dataset)-train_num))
+    train_idxs=list(range(len(dataset)))
+    random.shuffle(train_idxs)
+    train_dataset=torch.utils.data.Subset(dataset,train_idxs[:train_num])
+    val_dataset=torch.utils.data.Subset(dataset,train_idxs[train_num:])
+    
+    batch_size = 64
     train_dataloader = DataLoader(
-        train_dataset, batch_size=batch_size, shuffle=True, pin_memory=True
+        train_dataset, batch_size=batch_size, shuffle=True, pin_memory=True,num_workers=4
     )
-    val_dataset = VAEDataset(train_label_lines, input_shape)
     val_dataloader = DataLoader(
-        val_dataset, batch_size=batch_size, shuffle=False, pin_memory=True
+        val_dataset, batch_size=batch_size, shuffle=False, pin_memory=True,num_workers=4
     )
 
     # TODO 加载模型
@@ -63,8 +69,8 @@ if __name__ == "__main__":
     net = net.to(device)
 
     # 定义优化函数
-    opt = torch.optim.Adam(net.parameters(), lr=1e-4, weight_decay=5e-4)
-    lr_scheduler = torch.optim.lr_scheduler.StepLR(opt, step_size=2, gamma=0.98)
+    opt = torch.optim.Adam(net.parameters(), lr=1e-3, weight_decay=5e-4)
+    lr_scheduler = torch.optim.lr_scheduler.StepLR(opt, step_size=3, gamma=0.95)
 
     # 训练模型
     log_subdir = datetime.datetime.strftime(
@@ -82,23 +88,24 @@ if __name__ == "__main__":
     record = TrainingHistory(log_dir, net, input_shape)
 
     min_loss = np.inf
-    num_epoches = 300
+    num_epoches = 200
     for epoch in range(num_epoches):
         train_total_loss = 0
         total_reconstruction_loss = 0
         total_kld_loss = 0
 
         net = net.train()
+
         for i, batch in enumerate(train_dataloader):
             img = batch
             img = img.to(device)
             # 前向推理
+            opt.zero_grad()
             reconstructed_x, input, mu, log_var = net(img)
             loss = net.loss_function(reconstructed_x, input, mu, log_var, M_N=0.002)
             train_loss = loss["loss"]
 
             # 后向更新
-            opt.zero_grad()
             train_loss.backward()
             opt.step()
 
@@ -111,7 +118,7 @@ if __name__ == "__main__":
 
             if i % 50 == 0:
                 print(
-                    "epoch:{} train loss:{:.4f} reconstruction_loss:{:.4f} kld_loss:{:.4f} lr:{}".format(
+                    "epoch:{} train loss:{:.6f} reconstruction_loss:{:.6f} kld_loss:{:.6f} lr:{}".format(
                         epoch,
                         train_total_loss / (i + 1),
                         total_reconstruction_loss / (i + 1),
@@ -148,7 +155,7 @@ if __name__ == "__main__":
 
             if i % 50 == 0:
                 print(
-                    "epoch:{} val loss:{:.4f} reconstruction_loss:{:.4f} kld_loss:{:.4f} lr:{}".format(
+                    "epoch:{} val loss:{:.8f} reconstruction_loss:{:.8f} kld_loss:{:.8f} lr:{}".format(
                         epoch,
                         val_total_loss / (i + 1),
                         reconstruction_loss.item(),
@@ -174,6 +181,7 @@ if __name__ == "__main__":
 
         if val_total_loss / (i + 1) < min_loss:
             torch.save(net.eval().state_dict(), os.path.join("runs/best.pth"))
+            min_loss=val_total_loss / (i + 1)
 
         # # 重建样本阶段
         # if not os.path.exists(os.path.join(log_dir, "Reconstructed")):

@@ -19,17 +19,25 @@ def main():
     net = net.eval()
 
     # 重建样本阶段
-    images_path = {
-        "/home/wushaogui/MyCodes/Pytorch_VAE/imgs/反光/train/2210312201189B9_20230202100102_1.bmp",
-        "/home/wushaogui/MyCodes/Pytorch_VAE/imgs/反光/train/2210300632219B3_20230202101743_3.bmp",
-        "/home/wushaogui/MyCodes/Pytorch_VAE/imgs/反光/val/2210302341109B3_20230202101740_2.bmp",
-        "/home/wushaogui/MyCodes/Pytorch_VAE/imgs/反光/val/2210300632219B3_20230202095903_5.bmp",
-        "/home/wushaogui/MyCodes/Pytorch_VAE/imgs/反光/val/2210312201189B9_20230202095806_1.bmp",
-    }
-    input_shape = (128, 128)
-    save_path = "imgs"
+    data_path = "data/mnist_m_train"
+    images_path = [
+        image_path.replace("\n", "")
+        for image_path in open(
+            os.path.join(data_path, "val.txt"), encoding="utf-8", mode="r"
+        ).readlines()
+    ]
 
-    for image_path in images_path:
+
+    input_shape = (32, 32)
+    save_path = "imgs"
+    reconstructed_path = os.path.join(save_path, "Reconstructed")
+    sample_path = os.path.join(save_path, "Sample")
+    if not os.path.exists(reconstructed_path):
+        os.mkdir(reconstructed_path)
+    if not os.path.exists(sample_path):
+        os.mkdir(sample_path)
+
+    for image_path in images_path[:10]:
         img = Image.open(image_path)
         img = img.convert("RGB")
         img = img.resize(input_shape)
@@ -38,13 +46,11 @@ def main():
 
         input = torch.from_numpy(np.array([img])).to(device)
         recons = net.generate(input)
+        gen_sample = (
+            np.transpose(recons[0].detach().numpy(), [1, 2, 0]) + 1
+        ) / 2  # 反标准化，拿到[0,1)之间的值
 
-        result = np.hstack(
-            [
-                np.array(ori_img),
-                np.transpose(recons[0].detach().numpy(), [1, 2, 0]) * 255,
-            ]
-        )
+        result = np.hstack([np.array(ori_img), gen_sample * 255])
         result = result.astype(np.uint8)
         cv2.imwrite(
             os.path.join(save_path, "Reconstructed", os.path.basename(image_path)),
@@ -53,10 +59,15 @@ def main():
 
     # 随机生成样本
     samples = net.sample(16, device)
+    print(torch.min(samples), torch.max(samples))
     for i, sample in enumerate(samples):
+        gen_sample = (
+            np.transpose(sample.detach().numpy(), [1, 2, 0]) + 1
+        ) / 2  # 反标准化，拿到[0,1)之间的值
+        gen_sample = gen_sample * 255
         cv2.imwrite(
             os.path.join(save_path, f"Sample/{i}.png"),
-            np.transpose(sample.detach().numpy(), [1, 2, 0]) * 255,
+            gen_sample,
         )
 
 

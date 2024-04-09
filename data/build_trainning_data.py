@@ -1,15 +1,12 @@
 """
-语义分割文件布局
+图像生成文件布局
 
 原始文件布局：
 布局1：
 - xxxx
     - xxx.png
-    - xxx.json
     - yyy.bmp
-    - yyy.json
     ...
-
 
 目标文件夹：
 - ooo
@@ -97,6 +94,6 @@ def main(data_dir, save_dir, train_roate=0.9, seed=0):
 
 
 if __name__ == "__main__":
-    data_dir = "/mnt/wushaogui/反光"
-    save_dir = r"imgs"
+    data_dir = "/mnt/wushaogui/unsupervised/data/MNIST-M/data/mnist_m_train"
+    save_dir = "/mnt/wushaogui/unsupervised/dataset/MNIST-M"
     main(data_dir, save_dir)

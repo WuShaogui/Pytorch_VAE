@@ -4,6 +4,7 @@ from torch.nn import functional as F
 from typing import Any, List
 
 from nets.base import BaseVAE
+from nets.utils import ResBlock
 
 
 def weights_init(net, init_type="normal", init_gain=0.02):
@@ -49,31 +50,41 @@ class VanillaVAE(BaseVAE):
             hidden_dims = [32, 64, 128, 256, 512]
 
         # Build Encoder
-        for h_dim in hidden_dims:
-            modules.append(
-                nn.Sequential(
-                    nn.Conv2d(
-                        in_channels,
-                        out_channels=h_dim,
-                        kernel_size=3,
-                        stride=2,
-                        padding=1,
-                    ),
-                    nn.BatchNorm2d(h_dim),
-                    nn.LeakyReLU(),
+        for i, h_dim in enumerate(hidden_dims):
+            if i < 2:
+                modules.append(
+                    nn.Sequential(
+                        nn.Conv2d(
+                            in_channels,
+                            out_channels=h_dim,
+                            kernel_size=3,
+                            stride=2,
+                            padding=1,
+                        ),
+                        nn.BatchNorm2d(h_dim),
+                        nn.LeakyReLU(),
+                    )
                 )
-            )
+            else:
+                modules.append(
+                    ResBlock(
+                        in_channels=in_channels,
+                        out_channels=h_dim,
+                        bn=True,
+                    )
+                )
+                modules.append(nn.MaxPool2d((2, 2)))
             in_channels = h_dim
 
         self.encoder = nn.Sequential(*modules)
 
-        self.fc_mu = nn.Linear(hidden_dims[-1] * 16, latent_dim)
-        self.fc_var = nn.Linear(hidden_dims[-1] * 16, latent_dim)
+        self.fc_mu = nn.Linear(hidden_dims[-1] * 1, latent_dim)
+        self.fc_var = nn.Linear(hidden_dims[-1] * 1, latent_dim)
 
         # Build Decoder
         modules = []
 
-        self.decoder_input = nn.Linear(latent_dim, hidden_dims[-1] * 16)
+        self.decoder_input = nn.Linear(latent_dim, hidden_dims[-1] * 1)
 
         hidden_dims.reverse()
 
@@ -143,7 +154,7 @@ class VanillaVAE(BaseVAE):
         :return: (Tensor) [B x C x H x W]
         """
         result = self.decoder_input(z)
-        result = result.view(-1, 512, 4, 4)
+        result = result.view(-1, 512, 1, 1)
         result = self.decoder(result)
         result = self.final_layer(result)
         return result
@@ -189,7 +200,7 @@ class VanillaVAE(BaseVAE):
         return {
             "loss": loss,
             "Reconstruction_Loss": recons_loss.detach(),
-            "KLD": -kld_loss.detach(),
+            "KLD": kld_loss.detach(),
         }
 
     def sample(self, num_samples: int, current_device: int, **kwargs):
@@ -224,7 +235,7 @@ if __name__ == "__main__":
     print(device)
 
     # 模拟训练过程
-    inputs = torch.rand((2, 3, 128, 128)).to(device)
+    inputs = torch.rand((2, 3, 32, 32)).to(device)
     net = VanillaVAE(device, in_channels, latent_dim)
     net = net.to(device)
     reconstructed_x, input, mu, log_var = net(inputs)

@@ -19,7 +19,8 @@ def set_seed(seed=0):
 
 def preprocess_input(image):
     image /= 255.0
-
+    image -= np.array([0.5, 0.5, 0.5])
+    image /= np.array([0.5, 0.5, 0.5])
     return image
 
 
